@@ -1,0 +1,73 @@
+#root {
+	padding: 2rem 0;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.textbox-container {
+	width: 100%;
+	display: flex;
+}
+
+.textbox-container .textarea {
+	padding: 0 2.5rem;
+	width: 50%;
+}
+
+.button-container {
+	width: 100%;
+	height: 5rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 3rem;
+}
+
+.button-container > button {
+	min-width: 100px;
+}
+
+.progress-container {
+	position: relative;
+	font-size: 14px;
+	color: white;
+	background-color: #e9ecef;
+	border: solid 1px;
+	border-radius: 8px;
+	text-align: left;
+	overflow: hidden;
+}
+
+.progress-bar {
+	padding: 0 4px;
+	z-index: 0;
+	top: 0;
+	width: 1%;
+	height: 100%;
+	overflow: hidden;
+	background-color: #007bff;
+	white-space: nowrap;
+	color: transparent;
+}
+
+.progress-text {
+	z-index: 2;
+}
+
+.progress-bars-container {
+	padding: 8px;
+	height: 140px;
+}
+
+@media (max-width: 768px) {
+	.textbox-container {
+		flex-direction: column;
+	}
+
+	.textbox-container .textarea {
+		width: 100%;
+	}
+}
