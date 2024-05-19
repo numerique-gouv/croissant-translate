@@ -36,7 +36,7 @@ function App() {
 	}, []);
 
 	const initProgressCallback = (report: InitProgressReport) => {
-		console.log(report);
+		//console.log(report);
 		if (report.text.startsWith('Loading model from cache')) {
 			setOutput('Loading from cache...');
 		} else {
