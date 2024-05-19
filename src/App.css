@@ -70,4 +70,8 @@
 	.textbox-container .textarea {
 		width: 100%;
 	}
+
+	.button-container {
+		flex-direction: column;
+	}
 }
