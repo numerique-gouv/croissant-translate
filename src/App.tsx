@@ -29,11 +29,11 @@ function App() {
 	const [input, setInput] = useState<string>('');
 	const [output, setOutput] = useState<string>('');
 
-	// useEffect(() => {
-	// 	if (!engine) {
-	// 		loadEngine();
-	// 	}
-	// }, []);
+	useEffect(() => {
+		if (!engine) {
+			loadEngine();
+		}
+	}, []);
 
 	const initProgressCallback = (report: InitProgressReport) => {
 		console.log(report);
@@ -151,9 +151,9 @@ function App() {
 			<h1>🥐 CroissantLLM</h1>
 			<h2>A Truly Bilingual French-English Language Model</h2>
 
-			<Button variant='light' color='gray' onClick={loadEngine}>
+			{/* <Button variant='light' color='gray' onClick={loadEngine}>
 				Load
-			</Button>
+			</Button> */}
 
 			<div className='textbox-container'>
 				<Textarea
