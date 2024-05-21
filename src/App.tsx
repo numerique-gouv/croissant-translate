@@ -45,6 +45,12 @@ function App() {
 		}
 	}, []);
 
+	useEffect(() => {
+		setInput(output);
+		onSend(output);
+		setOutput('');
+	}, [switched]);
+
 	const initProgressCallback = (report: InitProgressReport) => {
 		//console.log(report);
 		if (
@@ -87,19 +93,19 @@ function App() {
 		return engine;
 	};
 
-	const onSend = async () => {
-		if (input === '') {
+	const onSend = async (inputUser: string) => {
+		if (inputUser === '') {
 			return;
 		}
 		setIsGenerating(true);
+		setOutput('');
 
 		let loadedEngine = engine;
 
-		const userMessage: ChatCompletionMessageParam = {
-			role: 'user',
-			content:
-				(switched ? promptEnglishToFrench : promptFrenchToEnglish) + input,
-		};
+		const paragraphs = inputUser.split('\n');
+		console.log(paragraphs);
+
+		const prompt = switched ? promptEnglishToFrench : promptFrenchToEnglish;
 
 		if (!loadedEngine) {
 			console.log('Engine not loaded');
@@ -116,20 +122,45 @@ function App() {
 
 		try {
 			await loadedEngine.resetChat();
-			console.log(userMessage);
-			const completion = await loadedEngine.chat.completions.create({
-				stream: true,
-				messages: [userMessage],
-			});
 
 			let assistantMessage = '';
-			for await (const chunk of completion) {
-				const curDelta = chunk.choices[0].delta.content;
-				if (curDelta) {
-					assistantMessage += curDelta;
+
+			for (let i = 0; i < paragraphs.length; i++) {
+				const paragraph = paragraphs[i];
+				if (paragraph === '') {
+					assistantMessage += '\n';
+					setOutput((prevOutput) => prevOutput + '\n');
+				} else {
+					const userMessage: ChatCompletionMessageParam = {
+						role: 'user',
+						content: prompt + paragraph,
+					};
+
+					const completion = await loadedEngine.chat.completions.create({
+						stream: true,
+						messages: [userMessage],
+					});
+					let translatedParagraph = '';
+
+					for await (const chunk of completion) {
+						const curDelta = chunk.choices[0].delta.content;
+						if (curDelta) {
+							translatedParagraph += curDelta;
+							setOutput((prevOutput) => prevOutput + curDelta);
+						}
+					}
+
+					if (i < paragraphs.length - 1) {
+						assistantMessage += translatedParagraph + '\n';
+						setOutput((prevOutput) => prevOutput + '\n');
+					} else {
+						assistantMessage += translatedParagraph;
+					}
 				}
-				setOutput(assistantMessage);
 			}
+
+			setOutput(assistantMessage);
+
 			setIsGenerating(false);
 
 			setRuntimeStats(await loadedEngine.runtimeStatsText());
@@ -228,7 +259,10 @@ function App() {
 			</Button>  */}
 
 			{modelInCache !== null && (
-				<p>Modèle téléchargé : {modelInCache === true ? '✅' : '❌'}</p>
+				<p>
+					Modèle téléchargé dans le cache de votre navigateur :{' '}
+					{modelInCache === true ? '✅' : '❌'}
+				</p>
 			)}
 
 			<div className='textbox-container'>
@@ -300,7 +334,7 @@ function App() {
 			<div className='button-container'>
 				<Button
 					variant='light'
-					color='gray'
+					color='black'
 					onClick={reset}
 					disabled={isGenerating || isFecthing}
 					loading={isFecthing}
@@ -310,8 +344,8 @@ function App() {
 
 				<Button
 					variant='light'
-					color='gray'
-					onClick={onSend}
+					color='black'
+					onClick={() => onSend(input)}
 					disabled={isGenerating || isFecthing}
 					loading={isGenerating || isFecthing}
 				>
@@ -321,7 +355,7 @@ function App() {
 				<Button
 					variant='light'
 					onClick={onStop}
-					color='gray'
+					color='black'
 					disabled={!isGenerating}
 					loading={isFecthing}
 				>
