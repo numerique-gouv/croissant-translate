@@ -5,6 +5,7 @@ import {
 	CreateWebWorkerEngine,
 	EngineInterface,
 	InitProgressReport,
+	hasModelInCache,
 } from '@mlc-ai/web-llm';
 import { appConfig } from './app-config';
 import Progress from './components/Progress';
@@ -28,22 +29,34 @@ function App() {
 	const [runtimeStats, setRuntimeStats] = useState('');
 	const [input, setInput] = useState<string>('');
 	const [output, setOutput] = useState<string>('');
+	const [modelInCache, setModelInCache] = useState<boolean | null>(null);
+
+	// useEffect(() => {
+	// 	if (!engine) {
+	// 		loadEngine();
+	// 	}
+	// }, []);
 
 	useEffect(() => {
-		if (!engine) {
-			loadEngine();
-		}
+		checkModelInCache();
 	}, []);
 
 	const initProgressCallback = (report: InitProgressReport) => {
 		//console.log(report);
-		if (report.text.startsWith('Loading model from cache')) {
-			setOutput('Loading from cache...');
+		if (modelInCache) {
+			setOutput('Chargement du modèle dans la RAM...');
 		} else {
 			setOutput(
 				'Téléchargement des points du modèle dans la cache de votre navigateur, cela peut prendre quelques minutes.'
 			);
 		}
+		// if (report.text.startsWith('Loading model from cache')) {
+		// 	setOutput('Loading from cache...');
+		// } else {
+		// 	setOutput(
+		// 		'Téléchargement des points du modèle dans la cache de votre navigateur, cela peut prendre quelques minutes.'
+		// 	);
+		// }
 
 		if (report.progress !== 0) {
 			setProgressPercentage(report.progress);
@@ -146,14 +159,26 @@ function App() {
 		engine.interruptGenerate();
 	};
 
+	const checkModelInCache = async () => {
+		const isInChache = await hasModelInCache(selectedModel, appConfig);
+		setModelInCache(isInChache);
+		console.log(`${selectedModel} in cache : ${isInChache}`);
+	};
+
 	return (
 		<>
 			<h1>🥐 CroissantLLM</h1>
 			<h2>A Truly Bilingual French-English Language Model</h2>
 
-			{/* <Button variant='light' color='gray' onClick={loadEngine}>
+			<Button variant='light' color='gray' onClick={loadEngine}>
 				Load
-			</Button> */}
+			</Button>
+
+			<Button variant='light' color='gray' onClick={checkModelInCache}>
+				Check Cache
+			</Button>
+
+			{modelInCache && <p>Modèle téléchargé : {modelInCache ? '✅' : '❌'}</p>}
 
 			<div className='textbox-container'>
 				<Textarea
@@ -222,7 +247,7 @@ function App() {
 			</div>
 
 			{progressPercentage !== 0 && (
-				<div className='progress-bars-containerOld'>
+				<div className='progress-bars-container'>
 					<Progress percentage={progressPercentage} />
 				</div>
 			)}
