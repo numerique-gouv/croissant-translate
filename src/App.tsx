@@ -9,7 +9,8 @@ import {
 } from '@mlc-ai/web-llm';
 import { appConfig } from './app-config';
 import Progress from './components/Progress';
-import { Button, Textarea } from '@mantine/core';
+import { ActionIcon, Button, Textarea, Tooltip } from '@mantine/core';
+import { IconSwitchHorizontal, IconSwitchVertical } from '@tabler/icons-react';
 
 appConfig.useIndexedDBCache = true;
 
@@ -21,6 +22,10 @@ if (appConfig.useIndexedDBCache) {
 
 function App() {
 	const selectedModel = 'CroissantLLMChat-v0.1-q0f16';
+	const promptEnglishToFrench =
+		"Pouvez-vous traduire ce texte en francais sans ajouter d'informations ?";
+	const promptFrenchToEnglish =
+		'Can you translate this text in english for me without adding informations';
 	const [engine, setEngine] = useState<EngineInterface | null>(null);
 	const [progress, setProgress] = useState('Not loaded');
 	const [progressPercentage, setProgressPercentage] = useState(0);
@@ -30,33 +35,27 @@ function App() {
 	const [input, setInput] = useState<string>('');
 	const [output, setOutput] = useState<string>('');
 	const [modelInCache, setModelInCache] = useState<boolean | null>(null);
-
-	// useEffect(() => {
-	// 	if (!engine) {
-	// 		loadEngine();
-	// 	}
-	// }, []);
+	const [switched, setSwitched] = useState<boolean>(false);
 
 	useEffect(() => {
 		checkModelInCache();
+		if (!engine) {
+			loadEngine();
+		}
 	}, []);
 
 	const initProgressCallback = (report: InitProgressReport) => {
 		//console.log(report);
-		if (modelInCache) {
+		if (
+			modelInCache === true ||
+			report.text.startsWith('Loading model from cache')
+		) {
 			setOutput('Chargement du modèle dans la RAM...');
 		} else {
 			setOutput(
 				'Téléchargement des points du modèle dans la cache de votre navigateur, cela peut prendre quelques minutes.'
 			);
 		}
-		// if (report.text.startsWith('Loading model from cache')) {
-		// 	setOutput('Loading from cache...');
-		// } else {
-		// 	setOutput(
-		// 		'Téléchargement des points du modèle dans la cache de votre navigateur, cela peut prendre quelques minutes.'
-		// 	);
-		// }
 
 		if (report.progress !== 0) {
 			setProgressPercentage(report.progress);
@@ -71,7 +70,7 @@ function App() {
 	const loadEngine = async () => {
 		console.log('Loading engine...');
 		setIsFetching(true);
-		setOutput('Loading model... (this might take a bit)');
+		setOutput('Chargement du modèle...');
 
 		const engine: EngineInterface = await CreateWebWorkerEngine(
 			new Worker(new URL('./worker.ts', import.meta.url), {
@@ -82,6 +81,8 @@ function App() {
 		);
 		setIsFetching(false);
 		setEngine(engine);
+		const isInChache = await hasModelInCache(selectedModel, appConfig);
+		setModelInCache(isInChache);
 		return engine;
 	};
 
@@ -95,7 +96,8 @@ function App() {
 
 		const userMessage: ChatCompletionMessageParam = {
 			role: 'user',
-			content: 'Tu peux me traduire ce texte en anglais :' + input,
+			content:
+				(switched ? promptEnglishToFrench : promptFrenchToEnglish) + input,
 		};
 
 		if (!loadedEngine) {
@@ -113,6 +115,7 @@ function App() {
 
 		try {
 			await loadedEngine.resetChat();
+			console.log(userMessage);
 			const completion = await loadedEngine.chat.completions.create({
 				stream: true,
 				messages: [userMessage],
@@ -167,18 +170,29 @@ function App() {
 
 	return (
 		<>
-			<h1>🥐 CroissantLLM</h1>
-			<h2>A Truly Bilingual French-English Language Model</h2>
+			<h1>Traduction Anglais/Français</h1>
+			<h2>Un service 100% souverain et confidentiel</h2>
+			<p>
+				Cette traduction est le résultat d'un traitement local dans votre
+				navigateur. Vos données ne quittent pas votre ordinateur et ne
+				transitent par aucun serveur.
+			</p>
 
-			<Button variant='light' color='gray' onClick={loadEngine}>
+			{/* <Button variant='light' color='gray' onClick={loadEngine}>
 				Load
-			</Button>
+			</Button> */}
 
-			<Button variant='light' color='gray' onClick={checkModelInCache}>
+			{/* <Button variant='light' color='gray' onClick={checkModelInCache}>
 				Check Cache
 			</Button>
 
-			{modelInCache && <p>Modèle téléchargé : {modelInCache ? '✅' : '❌'}</p>}
+			<Button variant='light' color='gray' onClick={() => engine?.unload()}>
+				Unload
+			</Button>  */}
+
+			{modelInCache !== null && (
+				<p>Modèle téléchargé : {modelInCache === true ? '✅' : '❌'}</p>
+			)}
 
 			<div className='textbox-container'>
 				<Textarea
@@ -190,10 +204,42 @@ function App() {
 					disabled={isFecthing}
 					variant='filled'
 					size='lg'
-					label='Français'
+					label={switched ? 'Anglais' : 'Français'}
 					placeholder='Écrivez ou collez votre texte ici.'
 					className='textarea'
 				/>
+
+				<div>
+					<div className='horizontal-switch-button'>
+						<Tooltip label='Intervertir les langues source et cible'>
+							<ActionIcon
+								variant='transparent'
+								color='black'
+								size='xl'
+								data-disabled={isFecthing || isGenerating}
+								onClick={() => setSwitched((prevState) => !prevState)}
+								className='switch-button'
+							>
+								<IconSwitchHorizontal style={{ width: '90%', height: '90%' }} />
+							</ActionIcon>
+						</Tooltip>
+					</div>
+					<div className='vertical-switch-button'>
+						<Tooltip label='Intervertir les langues source et cible'>
+							<ActionIcon
+								variant='transparent'
+								color='black'
+								size='xl'
+								disabled={isFecthing || isGenerating}
+								onClick={() => setSwitched((prevState) => !prevState)}
+								className='switch-button'
+							>
+								<IconSwitchVertical style={{ width: '90%', height: '90%' }} />
+							</ActionIcon>
+						</Tooltip>
+					</div>
+				</div>
+
 				<Textarea
 					value={output}
 					autosize
@@ -202,7 +248,7 @@ function App() {
 					disabled={isFecthing}
 					variant='filled'
 					size='lg'
-					label='Anglais'
+					label={switched ? 'Français' : 'Anglais'}
 					className='textarea'
 				/>
 				{/* <textarea
@@ -252,8 +298,15 @@ function App() {
 				</div>
 			)}
 
-			<div>{progress}</div>
+			<div className='progress-text'>{progress}</div>
 			{runtimeStats && <p>Performances : {runtimeStats}</p>}
+			<p>
+				Motorisé par {''}
+				<a href='https://huggingface.co/croissantllm' target='_blank'>
+					🥐CroissantLLM
+				</a>
+				, un LLM souverain par CentraleSupélec.
+			</p>
 		</>
 	);
 }

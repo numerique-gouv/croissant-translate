@@ -30,6 +30,16 @@ h2 {
 	text-align: center;
 }
 
+p {
+	text-align: center;
+	padding: 0 1rem;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
 textarea {
 	padding: 0.6em;
 }
@@ -42,16 +52,6 @@ button {
 
 button[disabled] {
 	cursor: not-allowed;
-}
-
-textarea,
-button {
-	border-radius: 8px;
-	border: 1px solid transparent;
-	font-size: 1em;
-	font-family: inherit;
-	background-color: #f9f9f9;
-	transition: border-color 0.25s;
 }
 
 textarea:hover,

@@ -10,6 +10,7 @@
 .textbox-container {
 	width: 100%;
 	display: flex;
+	align-items: center;
 }
 
 .textbox-container .textarea {
@@ -54,17 +55,34 @@
 }
 
 .progress-text {
-	z-index: 2;
+	text-align: center;
+	padding: 0 1rem;
 }
 
 .progress-bars-container {
 	padding: 8px;
-	height: 140px;
+	width: 80%;
+}
+
+.vertical-switch-button {
+	display: none;
+}
+
+.switch-button:not([disabled]):hover {
+	border-color: transparent;
+}
+
+.switch-button {
+	&:disabled,
+	&[data-disabled] {
+		background-color: transparent;
+	}
 }
 
 @media (max-width: 768px) {
 	.textbox-container {
 		flex-direction: column;
+		gap: 2rem;
 	}
 
 	.textbox-container .textarea {
@@ -74,5 +92,13 @@
 	.button-container {
 		flex-direction: column;
 		height: 15rem;
+	}
+
+	.horizontal-switch-button {
+		display: none;
+	}
+
+	.vertical-switch-button {
+		display: block;
 	}
 }

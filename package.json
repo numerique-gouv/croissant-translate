@@ -12,6 +12,7 @@
   "dependencies": {
     "@mantine/core": "^7.9.1",
     "@mlc-ai/web-llm": "^0.2.35",
+    "@tabler/icons-react": "^3.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
