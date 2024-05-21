@@ -29,6 +29,7 @@ function App() {
 	const [runtimeStats, setRuntimeStats] = useState('');
 	const [input, setInput] = useState<string>('');
 	const [output, setOutput] = useState<string>('');
+	const [prompt, setPrompt] = useState<string>('');
 	const [modelInCache, setModelInCache] = useState<boolean | null>(null);
 
 	// useEffect(() => {
@@ -95,7 +96,7 @@ function App() {
 
 		const userMessage: ChatCompletionMessageParam = {
 			role: 'user',
-			content: 'Tu peux me traduire ce texte en anglais :' + input,
+			content: prompt + input,
 		};
 
 		if (!loadedEngine) {
@@ -179,6 +180,15 @@ function App() {
 			</Button>
 
 			{modelInCache && <p>Modèle téléchargé : {modelInCache ? '✅' : '❌'}</p>}
+
+			<Textarea
+				value={prompt}
+				onChange={(e) => setPrompt(e.currentTarget.value)}
+				autosize
+				variant='filled'
+				size='lg'
+				className='textarea'
+			/>
 
 			<div className='textbox-container'>
 				<Textarea
