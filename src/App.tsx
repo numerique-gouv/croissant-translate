@@ -36,6 +36,7 @@ function App() {
 	const [output, setOutput] = useState<string>('');
 	const [modelInCache, setModelInCache] = useState<boolean | null>(null);
 	const [switched, setSwitched] = useState<boolean>(false);
+	//const [showModal, setShowModal] = useState<boolean>(false);
 
 	useEffect(() => {
 		checkModelInCache();
@@ -170,6 +171,38 @@ function App() {
 
 	return (
 		<>
+			{/* <Modal
+				opened={showModal}
+				onClose={() => setShowModal(false)}
+				withCloseButton={false}
+				centered
+				size='xl'
+			>
+				<p className=''>
+					Ce site est un outil de traduction 100% souverain et confidentiel.
+					Contrairement à d'autres outils de traduction comme ChatGPT, le modèle
+					utilisé fonctionnent entièrement dans votre navigateur, ce qui
+					signifie que :
+				</p>
+				<ul>
+					<li>Vos données ne quittent jamais votre ordinateur.</li>
+					<li>
+						Après le téléchargement initial du modèle, vous pouvez déconnecter
+						votre WiFi, et la traduction fonctionnera toujours hors ligne.
+					</li>
+				</ul>
+				<p>
+					Note : le premier message peut prendre un certain temps à traiter car
+					le modèle doit être entièrement téléchargé sur votre ordinateur. Mais
+					lors de vos prochaines visites sur ce site, le modèle se chargera
+					rapidement à partir du stockage local de votre ordinateur.
+				</p>
+				<p>Navigateurs supportés : Chrome, Edge (WebGPU requis)</p>
+				<p>
+					Ce projet est open source. Consultez la page Github pour plus de
+					détails et pour soumettre des bugs et des demandes de fonctionnalités.
+				</p>
+			</Modal> */}
 			<h1>Traduction Anglais/Français</h1>
 			<h2>Un service 100% souverain et confidentiel</h2>
 			<p>
@@ -180,6 +213,10 @@ function App() {
 
 			{/* <Button variant='light' color='gray' onClick={loadEngine}>
 				Load
+			</Button>
+
+			<Button variant='light' color='gray' onClick={() => setShowModal(true)}>
+				Modal
 			</Button> */}
 
 			{/* <Button variant='light' color='gray' onClick={checkModelInCache}>
