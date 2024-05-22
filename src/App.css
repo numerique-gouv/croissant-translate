@@ -79,6 +79,19 @@
 	}
 }
 
+.text-error {
+	background-color: #f8d7da;
+	color: #721c24;
+	border: 1px solid #f5c6cb;
+	padding: 10px 15px;
+	border-radius: 5px;
+	margin: 0 2.5rem;
+}
+
+.underline {
+	text-decoration: underline;
+}
+
 @media (max-width: 768px) {
 	.textbox-container {
 		flex-direction: column;

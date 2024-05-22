@@ -12,6 +12,12 @@ import Progress from './components/Progress';
 import { ActionIcon, Button, Textarea, Tooltip } from '@mantine/core';
 import { IconSwitchHorizontal, IconSwitchVertical } from '@tabler/icons-react';
 
+declare global {
+	interface Window {
+		chrome?: any;
+	}
+}
+
 appConfig.useIndexedDBCache = true;
 
 if (appConfig.useIndexedDBCache) {
@@ -22,10 +28,14 @@ if (appConfig.useIndexedDBCache) {
 
 function App() {
 	const selectedModel = 'CroissantLLMChat-v0.1-q0f16';
-	const promptEnglishToFrench =
-		"Pouvez-vous traduire ce texte en francais sans ajouter d'informations ?";
+	const promptSentenceEnglishToFrench =
+		"Pouvez-vous traduire ce texte en francais sans ajouter d'informations ? Voici le texte :";
+	const promptSentenceFrenchToEnglish =
+		'Can you translate this text in english for me without adding informations: ';
 	const promptFrenchToEnglish =
-		'Can you translate this text in english for me without adding informations';
+		'Translate these words in english. Just write the word translated, nothing else: ';
+	const promptEnglishToFrench =
+		'Traduis ces mots en francais. Ecris juste la traduction : ';
 	const [engine, setEngine] = useState<EngineInterface | null>(null);
 	const [progress, setProgress] = useState('Not loaded');
 	const [progressPercentage, setProgressPercentage] = useState(0);
@@ -36,11 +46,15 @@ function App() {
 	const [output, setOutput] = useState<string>('');
 	const [modelInCache, setModelInCache] = useState<boolean | null>(null);
 	const [switched, setSwitched] = useState<boolean>(false);
+	const [errorBrowserMessage, setErrorBrowserMessage] = useState<string | null>(
+		null
+	);
 	//const [showModal, setShowModal] = useState<boolean>(false);
 
 	useEffect(() => {
+		const compatibleBrowser = checkBrowser();
 		checkModelInCache();
-		if (!engine) {
+		if (!engine && compatibleBrowser) {
 			loadEngine();
 		}
 	}, []);
@@ -50,6 +64,27 @@ function App() {
 		onSend(output);
 		setOutput('');
 	}, [switched]);
+
+	const checkBrowser = () => {
+		const userAgent = navigator.userAgent;
+		let compatibleBrowser = true;
+		if (/firefox|fxios/i.test(userAgent)) {
+			setErrorBrowserMessage("Firefox n'est pas compatible avec WebGPU.");
+			compatibleBrowser = false;
+		} else if (
+			/safari/i.test(userAgent) &&
+			!/chrome|crios|crmo/i.test(userAgent)
+		) {
+			setErrorBrowserMessage("Safari n'est pas compatible avec WebGPU.");
+			compatibleBrowser = false;
+		} else if (!window.chrome) {
+			setErrorBrowserMessage(
+				"Votre navigatuer n'est pas compatible avec WebGPU."
+			);
+			compatibleBrowser = false;
+		}
+		return compatibleBrowser;
+	};
 
 	const initProgressCallback = (report: InitProgressReport) => {
 		//console.log(report);
@@ -103,9 +138,6 @@ function App() {
 		let loadedEngine = engine;
 
 		const paragraphs = inputUser.split('\n');
-		console.log(paragraphs);
-
-		const prompt = switched ? promptEnglishToFrench : promptFrenchToEnglish;
 
 		if (!loadedEngine) {
 			console.log('Engine not loaded');
@@ -127,15 +159,25 @@ function App() {
 
 			for (let i = 0; i < paragraphs.length; i++) {
 				const paragraph = paragraphs[i];
+
 				if (paragraph === '') {
 					assistantMessage += '\n';
 					setOutput((prevOutput) => prevOutput + '\n');
 				} else {
+					const words = paragraph.split(' ');
+					let prompt = '';
+					if (words.length > 5) {
+						prompt = switched
+							? promptSentenceEnglishToFrench
+							: promptSentenceFrenchToEnglish;
+					} else {
+						prompt = switched ? promptEnglishToFrench : promptFrenchToEnglish;
+					}
 					const userMessage: ChatCompletionMessageParam = {
 						role: 'user',
 						content: prompt + paragraph,
 					};
-
+					console.log(userMessage);
 					const completion = await loadedEngine.chat.completions.create({
 						stream: true,
 						messages: [userMessage],
@@ -241,6 +283,15 @@ function App() {
 				navigateur. Vos données ne quittent pas votre ordinateur et ne
 				transitent par aucun serveur.
 			</p>
+			{errorBrowserMessage && (
+				<p className='text-error'>
+					{errorBrowserMessage} Veuillez consulter{' '}
+					<a href='https://developer.mozilla.org/en-US/docs/Web/API/WebGPU_API#browser_compatibility'>
+						<span className='underline'>cette page</span>
+					</a>{' '}
+					pour voir la compatibilité avec les navigateurs.
+				</p>
+			)}
 
 			{/* <Button variant='light' color='gray' onClick={loadEngine}>
 				Load
