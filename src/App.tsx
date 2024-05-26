@@ -68,7 +68,17 @@ function App() {
 	const checkBrowser = () => {
 		const userAgent = navigator.userAgent;
 		let compatibleBrowser = true;
-		if (/firefox|fxios/i.test(userAgent)) {
+
+		const isMobile = /Mobi|Android|iPhone|iPad|iPod|Windows Phone/i.test(
+			userAgent
+		);
+
+		if (isMobile) {
+			setErrorBrowserMessage(
+				'Les téléphones mobiles ne sont pas compatibles avec WebGPU.'
+			);
+			compatibleBrowser = false;
+		} else if (/firefox|fxios/i.test(userAgent)) {
 			setErrorBrowserMessage("Firefox n'est pas compatible avec WebGPU.");
 			compatibleBrowser = false;
 		} else if (
