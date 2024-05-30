@@ -105,7 +105,7 @@ function App() {
 			setOutput('Chargement du modèle dans la RAM...');
 		} else {
 			setOutput(
-				'Téléchargement des points du modèle dans la cache de votre navigateur, cela peut prendre quelques minutes.'
+				'Téléchargement des points du modèle dans le cache de votre navigateur, cela peut prendre quelques minutes.'
 			);
 		}
 
