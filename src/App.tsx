@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import './App.css';
+import { ActionIcon, Button, Textarea, Tooltip } from '@mantine/core';
+import { IconSwitchHorizontal, IconSwitchVertical } from '@tabler/icons-react';
 import {
 	ChatCompletionMessageParam,
 	CreateWebWorkerEngine,
@@ -7,10 +8,11 @@ import {
 	InitProgressReport,
 	hasModelInCache,
 } from '@mlc-ai/web-llm';
+
+import './App.css';
 import { appConfig } from './app-config';
 import Progress from './components/Progress';
-import { ActionIcon, Button, Textarea, Tooltip } from '@mantine/core';
-import { IconSwitchHorizontal, IconSwitchVertical } from '@tabler/icons-react';
+import { promt_description } from './prompt';
 
 declare global {
 	interface Window {
@@ -28,18 +30,10 @@ if (appConfig.useIndexedDBCache) {
 
 function App() {
 	const selectedModel = 'CroissantLLMChat-v0.1-q0f16';
-	const promptSentenceEnglishToFrench =
-		"Pouvez-vous traduire ce texte en francais sans ajouter d'informations ? Voici le texte :";
-	const promptSentenceFrenchToEnglish =
-		'Can you translate this text in english for me without adding informations: ';
-	const promptFrenchToEnglish =
-		'Translate these words in english. Just write the word translated, nothing else: ';
-	const promptEnglishToFrench =
-		'Traduis ces mots en francais. Ecris juste la traduction : ';
 	const [engine, setEngine] = useState<EngineInterface | null>(null);
 	const [progress, setProgress] = useState('Not loaded');
 	const [progressPercentage, setProgressPercentage] = useState(0);
-	const [isFecthing, setIsFetching] = useState(false);
+	const [isFetching, setIsFetching] = useState(false);
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [runtimeStats, setRuntimeStats] = useState('');
 	const [input, setInput] = useState<string>('');
@@ -49,7 +43,6 @@ function App() {
 	const [errorBrowserMessage, setErrorBrowserMessage] = useState<string | null>(
 		null
 	);
-	//const [showModal, setShowModal] = useState<boolean>(false);
 
 	useEffect(() => {
 		const compatibleBrowser = checkBrowser();
@@ -65,6 +58,9 @@ function App() {
 		setOutput('');
 	}, [switched]);
 
+	/**
+	 * Check if the browser is compatible with WebGPU.
+	 */
 	const checkBrowser = () => {
 		const userAgent = navigator.userAgent;
 		let compatibleBrowser = true;
@@ -96,8 +92,10 @@ function App() {
 		return compatibleBrowser;
 	};
 
+	/**
+	 * Callback for the progress of the model initialization.
+	 */
 	const initProgressCallback = (report: InitProgressReport) => {
-		//console.log(report);
 		if (
 			modelInCache === true ||
 			report.text.startsWith('Loading model from cache')
@@ -105,7 +103,7 @@ function App() {
 			setOutput('Chargement du modèle dans la RAM...');
 		} else {
 			setOutput(
-				'Téléchargement des points du modèle dans le cache de votre navigateur, cela peut prendre quelques minutes.'
+				'Téléchargement des poids du modèle dans le cache de votre navigateur, cela peut prendre quelques minutes.'
 			);
 		}
 
@@ -119,8 +117,10 @@ function App() {
 		setProgress(report.text);
 	};
 
+	/**
+	 * Load the engine.
+	 */
 	const loadEngine = async () => {
-		console.log('Loading engine...');
 		setIsFetching(true);
 		setOutput('Chargement du modèle...');
 
@@ -138,6 +138,9 @@ function App() {
 		return engine;
 	};
 
+	/**
+	 * Send the input to the engine and get the output text translated.
+	 */
 	const onSend = async (inputUser: string) => {
 		if (inputUser === '') {
 			return;
@@ -147,11 +150,7 @@ function App() {
 
 		let loadedEngine = engine;
 
-		const paragraphs = inputUser.split('\n');
-
 		if (!loadedEngine) {
-			console.log('Engine not loaded');
-
 			try {
 				loadedEngine = await loadEngine();
 			} catch (error) {
@@ -161,6 +160,8 @@ function App() {
 				return;
 			}
 		}
+
+		const paragraphs = inputUser.split('\n');
 
 		try {
 			await loadedEngine.resetChat();
@@ -178,16 +179,17 @@ function App() {
 					let prompt = '';
 					if (words.length > 5) {
 						prompt = switched
-							? promptSentenceEnglishToFrench
-							: promptSentenceFrenchToEnglish;
+							? promt_description.promptSentenceEnglishToFrench
+							: promt_description.promptSentenceFrenchToEnglish;
 					} else {
-						prompt = switched ? promptEnglishToFrench : promptFrenchToEnglish;
+						prompt = switched
+							? promt_description.promptEnglishToFrench
+							: promt_description.promptFrenchToEnglish;
 					}
 					const userMessage: ChatCompletionMessageParam = {
 						role: 'user',
 						content: prompt + paragraph,
 					};
-					console.log(userMessage);
 					const completion = await loadedEngine.chat.completions.create({
 						stream: true,
 						messages: [userMessage],
@@ -212,11 +214,8 @@ function App() {
 			}
 
 			setOutput(assistantMessage);
-
 			setIsGenerating(false);
-
 			setRuntimeStats(await loadedEngine.runtimeStatsText());
-			console.log(await loadedEngine.runtimeStatsText());
 		} catch (error) {
 			setIsGenerating(false);
 			console.log('EXECPTION');
@@ -226,6 +225,9 @@ function App() {
 		}
 	};
 
+	/**
+	 * Reset the chat engine and the user input.
+	 */
 	const reset = async () => {
 		if (!engine) {
 			console.log('Engine not loaded');
@@ -236,6 +238,9 @@ function App() {
 		setOutput('');
 	};
 
+	/**
+	 * Stop the generation.
+	 */
 	const onStop = () => {
 		if (!engine) {
 			console.log('Engine not loaded');
@@ -246,6 +251,9 @@ function App() {
 		engine.interruptGenerate();
 	};
 
+	/**
+	 * Check if the model is in the cache.
+	 */
 	const checkModelInCache = async () => {
 		const isInChache = await hasModelInCache(selectedModel, appConfig);
 		setModelInCache(isInChache);
@@ -254,38 +262,6 @@ function App() {
 
 	return (
 		<>
-			{/* <Modal
-				opened={showModal}
-				onClose={() => setShowModal(false)}
-				withCloseButton={false}
-				centered
-				size='xl'
-			>
-				<p className=''>
-					Ce site est un outil de traduction 100% souverain et confidentiel.
-					Contrairement à d'autres outils de traduction comme ChatGPT, le modèle
-					utilisé fonctionnent entièrement dans votre navigateur, ce qui
-					signifie que :
-				</p>
-				<ul>
-					<li>Vos données ne quittent jamais votre ordinateur.</li>
-					<li>
-						Après le téléchargement initial du modèle, vous pouvez déconnecter
-						votre WiFi, et la traduction fonctionnera toujours hors ligne.
-					</li>
-				</ul>
-				<p>
-					Note : le premier message peut prendre un certain temps à traiter car
-					le modèle doit être entièrement téléchargé sur votre ordinateur. Mais
-					lors de vos prochaines visites sur ce site, le modèle se chargera
-					rapidement à partir du stockage local de votre ordinateur.
-				</p>
-				<p>Navigateurs supportés : Chrome, Edge (WebGPU requis)</p>
-				<p>
-					Ce projet est open source. Consultez la page Github pour plus de
-					détails et pour soumettre des bugs et des demandes de fonctionnalités.
-				</p>
-			</Modal> */}
 			<h1>Traduction Anglais/Français</h1>
 			<h2>Un service 100% souverain et confidentiel</h2>
 			<p>
@@ -303,22 +279,6 @@ function App() {
 				</p>
 			)}
 
-			{/* <Button variant='light' color='gray' onClick={loadEngine}>
-				Load
-			</Button>
-
-			<Button variant='light' color='gray' onClick={() => setShowModal(true)}>
-				Modal
-			</Button> */}
-
-			{/* <Button variant='light' color='gray' onClick={checkModelInCache}>
-				Check Cache
-			</Button>
-
-			<Button variant='light' color='gray' onClick={() => engine?.unload()}>
-				Unload
-			</Button>  */}
-
 			{modelInCache !== null && (
 				<p>
 					Modèle téléchargé dans le cache de votre navigateur :{' '}
@@ -333,7 +293,7 @@ function App() {
 					autosize
 					minRows={15}
 					maxRows={15}
-					disabled={isFecthing}
+					disabled={isFetching}
 					variant='filled'
 					size='lg'
 					label={switched ? 'Anglais' : 'Français'}
@@ -348,7 +308,7 @@ function App() {
 								variant='transparent'
 								color='black'
 								size='xl'
-								data-disabled={isFecthing || isGenerating}
+								data-disabled={isFetching || isGenerating}
 								onClick={() => setSwitched((prevState) => !prevState)}
 								className='switch-button'
 							>
@@ -362,7 +322,7 @@ function App() {
 								variant='transparent'
 								color='black'
 								size='xl'
-								disabled={isFecthing || isGenerating}
+								disabled={isFetching || isGenerating}
 								onClick={() => setSwitched((prevState) => !prevState)}
 								className='switch-button'
 							>
@@ -377,19 +337,12 @@ function App() {
 					autosize
 					minRows={15}
 					maxRows={15}
-					disabled={isFecthing}
+					disabled={isFetching}
 					variant='filled'
 					size='lg'
 					label={switched ? 'Français' : 'Anglais'}
 					className='textarea'
 				/>
-				{/* <textarea
-					value={input}
-					placeholder='Ecrivez ou collez votre texte ici.'
-					rows={25}
-					onChange={(e) => setInput(e.target.value)}
-				></textarea>
-				<textarea value={output} rows={25} readOnly></textarea> */}
 			</div>
 
 			<div className='button-container'>
@@ -397,8 +350,8 @@ function App() {
 					variant='light'
 					color='black'
 					onClick={reset}
-					disabled={isGenerating || isFecthing}
-					loading={isFecthing}
+					disabled={isGenerating || isFetching}
+					loading={isFetching}
 				>
 					Effacer
 				</Button>
@@ -407,8 +360,8 @@ function App() {
 					variant='light'
 					color='black'
 					onClick={() => onSend(input)}
-					disabled={isGenerating || isFecthing}
-					loading={isGenerating || isFecthing}
+					disabled={isGenerating || isFetching}
+					loading={isGenerating || isFetching}
 				>
 					Traduire
 				</Button>
@@ -418,7 +371,7 @@ function App() {
 					onClick={onStop}
 					color='black'
 					disabled={!isGenerating}
-					loading={isFecthing}
+					loading={isFetching}
 				>
 					Stop
 				</Button>
