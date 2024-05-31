@@ -10,12 +10,12 @@
 
 A micro application based on CroissantLLM and running entirely in the browser with WebLLM. Translates texts between French and English without sharing your content with the server.
 
-- Fully private = No conversation data ever leaves your computer
+- Fully private = No data ever leaves your computer
 - Runs in the browser = No server needed and no install needed!
 - Works offline
 - Easy-to-use interface
 
-This tool is built on top of [WebLLM](https://github.com/mlc-ai/web-llm), a package that brings language model inferebce directly onto web browsers with hardware acceleration.
+This tool is built on top of [WebLLM](https://github.com/mlc-ai/web-llm), a package that brings language model inference directly onto web browsers with hardware acceleration.
 
 ## System Requirements
 
@@ -47,9 +47,11 @@ You also need to change the custom prompt added before the user's text in the [p
 
 If you need further information, you can check the [MLC LLM documentation](https://llm.mlc.ai/docs/deploy/javascript.html) on how to add new model weights and libraries to WebLLM.
 
+**Disclaimer**: We utilize the chat version of CroissantLLM, specifically fine-tuned for chat interactions rather than translation purposes. Hence, you may encounter some limitations or inaccuracies in the translation. Additionally, as with any LLM, it's possible to encounter hallucinations or inaccuracies in generated text.
+
 ## Try it out
 
-You can [try it here](https://numerique-gouv.github.io/croissant-translate/). You can run the project locally and contribute to improve the interface, speed up initial model loading time and fix bugs, by following these steps:
+You can [try it here](https://numerique-gouv.github.io/croissant-translate/). You can also run the project locally and contribute to improve the interface, speed up initial model loading time and fix bugs, by following these steps:
 
 ### Prerequisite
 
@@ -76,7 +78,7 @@ npm run dev
 
 ### Building the project for production
 
-To compile the react code yourself, run:
+To compile the React code yourself, run:
 
 ```sh
 # Compile and minify the project for publishing, outputs to `dist/`
